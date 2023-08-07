@@ -1,0 +1,132 @@
+#include <iostream>
+#include <string>
+#include <algorithm>
+#include <cmath>
+#include <vector>
+#include <map>
+
+
+
+
+using namespace std;
+
+
+template <class Key, class Value>
+class dictionary
+{
+    public:
+    
+    
+    virtual ~dictionary() = default; // деструктор
+    
+    virtual const Value& get(const Key& key) const = 0; // получаем значение
+    virtual void set(const Key& key, const Value& value) = 0; // устанавливаем
+    virtual bool is_set(const Key& key) = 0; // проверка
+};
+
+
+
+template <class Key>
+class not_found_exception : public std::exception
+{
+    public:
+    virtual const Key& get_key() const noexcept = 0; // получаем без ошибок
+};
+
+
+
+template <class Key>                               // создаем шаблон для проверки ключа
+class Check : public not_found_exception <Key>
+{
+    private:
+    Key k;
+    
+    public:
+    virtual const Key& get_key() const noexcept
+    {
+        return k;                              // если удовлетворяет возвращаем
+    }
+    // запускаем шаблон
+    Check(const Key& key) : k(key)
+    {
+        //
+    }
+    
+};
+
+                                                 // создаем основную функцию для проверки
+                                                 // используя контейнер map ключ\значение 
+ template <class Key, class Value> 
+ 
+ class Final_result : public dictionary<Key, Value> 
+ {
+     private:
+     map <Key, Value> mp;
+     
+     public:
+     virtual const Value& get(const Key& key) const // получем
+     {
+         // перебираем итератором по всем значениям, включил auto чтобы компилятор автоматически делал тип значения
+         auto iter = mp.find(key);
+         if(iter == mp.end()) // как только доходим до последнего, кидаем исключение и возвращаем вторую пару значения
+                throw Check<Key>(key);
+                
+        return iter -> second;
+       
+     }
+      virtual void set(const Key& key, const Value& value) // устанавливаем
+      {
+          mp[key] = value;
+      }
+     
+     virtual bool is_set(const Key& key)                    // и проверяем на истину
+     {
+         if(mp.find(key) != mp.end())
+         {
+             cout << "Успех! ";
+             return true;
+         }
+         else
+         {
+             cout << "Ошибка";
+             return false;
+         }
+     }
+    
+ };
+
+
+
+
+
+int main()
+{
+    Final_result<string, int> f;
+    f.set("One", 1);
+    f.set("Two", 2);
+    f.set("Three", 3);
+    f.set("Four", 4);
+    f.set("Five", 5);
+    
+    try
+    {
+        
+       cout << f.get("One") << endl;
+       cout << f.get("Five") << endl;
+       cout << f.get("Four") << endl;
+       cout << f.get("Two") << endl;
+       cout << f.get("Six") << endl;
+     
+        
+    }
+    catch(const not_found_exception<string> &exception)
+       {
+           cout << "Ключ " << exception.get_key() << " не найден." << " Значение неизвестно" << endl;
+           
+       }
+
+       
+    
+
+    return 0;
+}
